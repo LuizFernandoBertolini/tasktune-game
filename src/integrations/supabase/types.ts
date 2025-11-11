@@ -185,6 +185,7 @@ export type Database = {
           font_size: string | null
           high_contrast: boolean | null
           level: number
+          low_stimulus: boolean | null
           pomodoro_duration: number | null
           sound_feedback: boolean | null
           tz: string | null
@@ -198,6 +199,7 @@ export type Database = {
           font_size?: string | null
           high_contrast?: boolean | null
           level?: number
+          low_stimulus?: boolean | null
           pomodoro_duration?: number | null
           sound_feedback?: boolean | null
           tz?: string | null
@@ -211,6 +213,7 @@ export type Database = {
           font_size?: string | null
           high_contrast?: boolean | null
           level?: number
+          low_stimulus?: boolean | null
           pomodoro_duration?: number | null
           sound_feedback?: boolean | null
           tz?: string | null

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { useAccessibility } from "./hooks/useAccessibility";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -17,6 +18,26 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function AppContent() {
+  useAccessibility();
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/app" element={<AppLayout />}>
+        <Route path="hoje" element={<Hoje />} />
+        <Route path="foco" element={<Foco />} />
+        <Route path="foco/:taskId" element={<Foco />} />
+        <Route path="recompensas" element={<Recompensas />} />
+        <Route path="relatorios" element={<Relatorios />} />
+        <Route path="config" element={<Config />} />
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -24,20 +45,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/app" element={<AppLayout />}>
-              <Route path="hoje" element={<Hoje />} />
-              <Route path="foco" element={<Foco />} />
-              <Route path="foco/:taskId" element={<Foco />} />
-              <Route path="recompensas" element={<Recompensas />} />
-              <Route path="relatorios" element={<Relatorios />} />
-              <Route path="config" element={<Config />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppContent />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -53,23 +53,32 @@ export default function Hoje() {
 
   const loadStats = async () => {
     const today = new Date().toISOString().slice(0, 10);
-    const { data } = await supabase
+    
+    // Buscar stats do dia
+    const { data: statsData } = await supabase
       .from("user_stats")
       .select("*")
       .eq("user_id", user?.id)
       .eq("day", today)
       .maybeSingle();
 
-    if (data) {
-      const completed = tasks.filter((t) => t.status === "done").length;
-      const total = tasks.length || 1;
-      setStats({
-        minutes: data.minutes_focused,
-        completed,
-        total,
-        streak: data.streak,
-      });
-    }
+    // Contar tarefas do dia atual
+    const { data: todayTasks } = await supabase
+      .from("tasks")
+      .select("status")
+      .eq("user_id", user?.id)
+      .gte("created_at", `${today}T00:00:00`)
+      .lte("created_at", `${today}T23:59:59`);
+
+    const completed = todayTasks?.filter((t) => t.status === "done").length || 0;
+    const total = todayTasks?.length || 0;
+
+    setStats({
+      minutes: statsData?.minutes_focused || 0,
+      completed,
+      total,
+      streak: statsData?.streak || 0,
+    });
   };
 
   const handleCreate = async () => {
@@ -163,13 +172,15 @@ export default function Hoje() {
         <Card className="p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Progresso do dia</span>
+            <span className="text-sm font-bold text-primary">{progress.toFixed(0)}%</span>
           </div>
           <Progress value={progress} className="mb-2" />
+          <div className="flex justify-between text-xs text-muted-foreground mb-2">
+            <span>{stats.completed} de {stats.total} tarefas concluídas hoje</span>
+          </div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{stats.minutes} min focados</span>
-            <span>
-              {stats.completed}/{stats.total} tarefas
-            </span>
+            <span className="text-success">+10 XP por tarefa concluída</span>
           </div>
         </Card>
       </div>

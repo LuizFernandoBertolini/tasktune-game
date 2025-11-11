@@ -108,4 +108,21 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Modo Alto Contraste */
+  [data-high-contrast="true"] {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 90%;
+    --border: 0 0% 40%;
+  }
+  
+  /* Modo Reduzido de Estímulo */
+  [data-low-stimulus="true"] * {
+    animation: none !important;
+    transition: none !important;
+  }
 }

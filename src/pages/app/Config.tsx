@@ -17,6 +17,7 @@ export default function Config() {
   const [fontSize, setFontSize] = useState("medium");
   const [highContrast, setHighContrast] = useState(false);
   const [soundFeedback, setSoundFeedback] = useState(true);
+  const [lowStimulus, setLowStimulus] = useState(false);
   const { user, signOut } = useAuth();
 
   useEffect(() => {
@@ -38,6 +39,33 @@ export default function Config() {
       setFontSize(data.font_size || "medium");
       setHighContrast(data.high_contrast || false);
       setSoundFeedback(data.sound_feedback ?? true);
+      setLowStimulus(data.low_stimulus || false);
+      applyAccessibilitySettings(data.font_size || "medium", data.high_contrast || false, data.low_stimulus || false);
+    }
+  };
+
+  const applyAccessibilitySettings = (fontSizeValue: string, highContrastValue: boolean, lowStimulusValue: boolean) => {
+    const root = document.documentElement;
+    
+    // Aplicar tamanho de fonte
+    if (fontSizeValue === "large") {
+      root.style.fontSize = "120%";
+    } else {
+      root.style.fontSize = "100%";
+    }
+    
+    // Aplicar contraste alto
+    if (highContrastValue) {
+      root.setAttribute("data-high-contrast", "true");
+    } else {
+      root.removeAttribute("data-high-contrast");
+    }
+    
+    // Aplicar modo reduzido de estímulo
+    if (lowStimulusValue) {
+      root.setAttribute("data-low-stimulus", "true");
+    } else {
+      root.removeAttribute("data-low-stimulus");
     }
   };
 
@@ -50,12 +78,14 @@ export default function Config() {
         font_size: fontSize,
         high_contrast: highContrast,
         sound_feedback: soundFeedback,
+        low_stimulus: lowStimulus,
       })
       .eq("user_id", user?.id);
 
     if (error) {
       toast.error("Erro ao salvar");
     } else {
+      applyAccessibilitySettings(fontSize, highContrast, lowStimulus);
       toast.success("Configurações salvas!");
     }
   };
@@ -136,6 +166,19 @@ export default function Config() {
               onCheckedChange={setSoundFeedback}
             />
           </div>
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="lowStimulus">Modo reduzido de estímulo</Label>
+            <Switch
+              id="lowStimulus"
+              checked={lowStimulus}
+              onCheckedChange={setLowStimulus}
+            />
+          </div>
+          
+          <p className="text-xs text-muted-foreground">
+            Remove animações e efeitos visuais intensos para uma experiência mais calma
+          </p>
         </div>
       </Card>
 
