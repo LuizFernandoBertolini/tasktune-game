@@ -96,7 +96,10 @@ export default function Hoje() {
   const handleComplete = async (taskId: string) => {
     const { error } = await supabase
       .from("tasks")
-      .update({ status: "done" })
+      .update({ 
+        status: "done",
+        completed_at: new Date().toISOString()
+      })
       .eq("id", taskId);
 
     if (error) {

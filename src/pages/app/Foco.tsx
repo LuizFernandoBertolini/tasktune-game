@@ -133,7 +133,10 @@ export default function Foco() {
       if (taskId) {
         await supabase
           .from("tasks")
-          .update({ status: "done" })
+          .update({ 
+            status: "done",
+            completed_at: new Date().toISOString()
+          })
           .eq("id", taskId);
       }
 

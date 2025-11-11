@@ -10,14 +10,50 @@ export default function Relatorios() {
   const [weekData, setWeekData] = useState<any[]>([]);
   const [monthData, setMonthData] = useState<any[]>([]);
   const [maxStreak, setMaxStreak] = useState(0);
+  const [weekCompletedTasks, setWeekCompletedTasks] = useState(0);
+  const [monthCompletedTasks, setMonthCompletedTasks] = useState(0);
+  const [currentPeriod, setCurrentPeriod] = useState<"week" | "month">("week");
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
       loadWeekData();
       loadMonthData();
+      loadCompletedTasks("week");
+      loadCompletedTasks("month");
     }
   }, [user]);
+
+  const loadCompletedTasks = async (period: "week" | "month") => {
+    // Calcular a data inicial baseada no período
+    const now = new Date();
+    let startDate: Date;
+    
+    if (period === "week") {
+      // Início da semana (domingo)
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - now.getDay());
+      startDate.setHours(0, 0, 0, 0);
+    } else {
+      // Início do mês
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    
+    const { data, error, count } = await supabase
+      .from("tasks")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user?.id)
+      .eq("status", "done")
+      .gte("completed_at", startDate.toISOString());
+
+    if (!error && count !== null) {
+      if (period === "week") {
+        setWeekCompletedTasks(count);
+      } else {
+        setMonthCompletedTasks(count);
+      }
+    }
+  };
 
   const loadWeekData = async () => {
     const today = new Date();
@@ -64,8 +100,11 @@ export default function Relatorios() {
     }
   };
 
-  const totalMinutes = weekData.reduce((acc, d) => acc + d.minutos, 0);
-  const totalTasks = weekData.reduce((acc, d) => acc + d.tarefas, 0);
+  const totalMinutes = currentPeriod === "week" 
+    ? weekData.reduce((acc, d) => acc + d.minutos, 0)
+    : monthData.reduce((acc, d) => acc + d.minutos, 0);
+  
+  const totalCompletedTasks = currentPeriod === "week" ? weekCompletedTasks : monthCompletedTasks;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
@@ -85,7 +124,7 @@ export default function Relatorios() {
             <Target className="w-4 h-4 text-success" />
             <span className="text-xs text-muted-foreground">Tarefas</span>
           </div>
-          <p className="text-2xl font-bold">{totalTasks}</p>
+          <p className="text-2xl font-bold">{totalCompletedTasks}</p>
         </Card>
 
         <Card className="p-4">
@@ -97,7 +136,11 @@ export default function Relatorios() {
         </Card>
       </div>
 
-      <Tabs defaultValue="semana" className="w-full">
+      <Tabs 
+        defaultValue="semana" 
+        className="w-full"
+        onValueChange={(value) => setCurrentPeriod(value === "semana" ? "week" : "month")}
+      >
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="semana">Semana</TabsTrigger>
           <TabsTrigger value="mes">Mês</TabsTrigger>
