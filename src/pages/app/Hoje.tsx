@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import XPCard from "@/components/XPCard";
 
 interface Task {
   id: string;
@@ -94,6 +95,9 @@ export default function Hoje() {
   };
 
   const handleComplete = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
     const { error } = await supabase
       .from("tasks")
       .update({ 
@@ -105,9 +109,27 @@ export default function Hoje() {
     if (error) {
       toast.error("Erro ao completar tarefa");
     } else {
-      toast.success("Tarefa concluída! +XP");
+      // Chamar edge function para atualizar XP
+      const { data: xpData } = await supabase.functions.invoke('award-xp', {
+        body: {
+          user_id: user?.id,
+          task_id: taskId,
+          difficulty: task.difficulty,
+          abandoned: false,
+          minutes: 0
+        }
+      });
+
+      if (xpData?.ok) {
+        toast.success(`Tarefa concluída! +${xpData.xp_awarded} XP`);
+      } else {
+        toast.success("Tarefa concluída!");
+      }
+      
       loadTasks();
       loadStats();
+      // Forçar reload do XPCard
+      window.dispatchEvent(new CustomEvent('xp-updated'));
     }
   };
 
@@ -123,13 +145,24 @@ export default function Hoje() {
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Hoje</h1>
+        
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <XPCard />
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Flame className="w-4 h-4 text-accent" />
+              <div>
+                <p className="text-xs text-muted-foreground">Sequência</p>
+                <p className="text-2xl font-bold">{stats.streak}</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">dias consecutivos</p>
+          </Card>
+        </div>
+
         <Card className="p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Progresso do dia</span>
-            <div className="flex items-center gap-2">
-              <Flame className="w-4 h-4 text-accent" />
-              <span className="text-sm font-bold">{stats.streak} dias</span>
-            </div>
           </div>
           <Progress value={progress} className="mb-2" />
           <div className="flex justify-between text-xs text-muted-foreground">

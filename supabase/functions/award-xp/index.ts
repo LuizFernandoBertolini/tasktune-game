@@ -66,6 +66,27 @@ serve(async (req) => {
     const streakBonus = 5 * Math.min(up?.streak ?? newStreak, 10);
     xp += streakBonus;
 
+    // Atualizar XP e level no perfil do usuário
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('xp_total, level')
+      .eq('user_id', user_id)
+      .single();
+
+    let newXpTotal = (profile?.xp_total ?? 0) + xp;
+    let newLevel = profile?.level ?? 1;
+
+    // Calcular level ups
+    while (newXpTotal >= 100 * newLevel) {
+      newXpTotal -= 100 * newLevel;
+      newLevel += 1;
+    }
+
+    await supabase
+      .from('user_profiles')
+      .update({ xp_total: newXpTotal, level: newLevel })
+      .eq('user_id', user_id);
+
     await supabase.from('rewards').insert({
       user_id,
       type: 'earn',
@@ -89,7 +110,13 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ ok: true, xp_awarded: xp, streak: up?.streak ?? newStreak }),
+      JSON.stringify({ 
+        ok: true, 
+        xp_awarded: xp, 
+        streak: up?.streak ?? newStreak,
+        new_level: newLevel,
+        xp_total: newXpTotal
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (e) {

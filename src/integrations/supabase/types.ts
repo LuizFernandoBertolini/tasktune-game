@@ -184,10 +184,12 @@ export type Database = {
           display_name: string | null
           font_size: string | null
           high_contrast: boolean | null
+          level: number
           pomodoro_duration: number | null
           sound_feedback: boolean | null
           tz: string | null
           user_id: string
+          xp_total: number
         }
         Insert: {
           avatar_url?: string | null
@@ -195,10 +197,12 @@ export type Database = {
           display_name?: string | null
           font_size?: string | null
           high_contrast?: boolean | null
+          level?: number
           pomodoro_duration?: number | null
           sound_feedback?: boolean | null
           tz?: string | null
           user_id: string
+          xp_total?: number
         }
         Update: {
           avatar_url?: string | null
@@ -206,10 +210,12 @@ export type Database = {
           display_name?: string | null
           font_size?: string | null
           high_contrast?: boolean | null
+          level?: number
           pomodoro_duration?: number | null
           sound_feedback?: boolean | null
           tz?: string | null
           user_id?: string
+          xp_total?: number
         }
         Relationships: []
       }

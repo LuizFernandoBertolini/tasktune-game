@@ -112,7 +112,18 @@ export default function Foco() {
         })
         .eq("id", sessionId);
 
-      toast("Sessão abandonada", { description: "Tudo bem, você pode tentar novamente!" });
+      // Call edge function for XP calculation (reduced XP for abandoned)
+      await supabase.functions.invoke("award-xp", {
+        body: {
+          user_id: user?.id,
+          task_id: taskId || null,
+          difficulty: task?.difficulty || "easy",
+          abandoned: true,
+          minutes,
+        },
+      });
+
+      toast("Sessão abandonada", { description: "Você ainda ganhou 50% do XP!" });
       navigate("/app/hoje");
     }
   };
@@ -141,25 +152,26 @@ export default function Foco() {
       }
 
       // Call edge function for XP calculation
-      const { data: sessionData } = await supabase
-        .from("focus_sessions")
-        .select("*")
-        .eq("id", sessionId)
-        .single();
+      const { data: xpData } = await supabase.functions.invoke("award-xp", {
+        body: {
+          user_id: user?.id,
+          task_id: taskId || null,
+          difficulty: task?.difficulty || "easy",
+          abandoned: false,
+          minutes,
+        },
+      });
 
-      if (sessionData) {
-        await supabase.functions.invoke("award-xp", {
-          body: {
-            user_id: user?.id,
-            task_id: taskId || null,
-            difficulty: task?.difficulty || "easy",
-            abandoned: false,
-            minutes,
-          },
+      if (xpData?.ok) {
+        toast.success("Sessão concluída! 🎉", { 
+          description: `+${xpData.xp_awarded} XP ganhos!` 
         });
+      } else {
+        toast.success("Sessão concluída! 🎉");
       }
 
-      toast.success("Sessão concluída! 🎉", { description: `+XP ganhos!` });
+      // Atualizar XPCard
+      window.dispatchEvent(new CustomEvent('xp-updated'));
       navigate("/app/hoje");
     }
   };

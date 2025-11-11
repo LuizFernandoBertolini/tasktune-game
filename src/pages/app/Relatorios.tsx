@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, Flame, Target } from "lucide-react";
+import { TrendingUp, Flame, Target, Award } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 export default function Relatorios() {
   const [weekData, setWeekData] = useState<any[]>([]);
@@ -13,6 +14,8 @@ export default function Relatorios() {
   const [weekCompletedTasks, setWeekCompletedTasks] = useState(0);
   const [monthCompletedTasks, setMonthCompletedTasks] = useState(0);
   const [currentPeriod, setCurrentPeriod] = useState<"week" | "month">("week");
+  const [xpTotal, setXpTotal] = useState(0);
+  const [level, setLevel] = useState(1);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -21,8 +24,22 @@ export default function Relatorios() {
       loadMonthData();
       loadCompletedTasks("week");
       loadCompletedTasks("month");
+      loadXPData();
     }
   }, [user]);
+
+  const loadXPData = async () => {
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("xp_total, level")
+      .eq("user_id", user?.id)
+      .single();
+
+    if (data) {
+      setXpTotal(data.xp_total);
+      setLevel(data.level);
+    }
+  };
 
   const loadCompletedTasks = async (period: "week" | "month") => {
     // Calcular a data inicial baseada no período
@@ -105,10 +122,32 @@ export default function Relatorios() {
     : monthData.reduce((acc, d) => acc + d.minutos, 0);
   
   const totalCompletedTasks = currentPeriod === "week" ? weekCompletedTasks : monthCompletedTasks;
+  const xpForNextLevel = 100 * level;
+  const progressPercentage = (xpTotal / xpForNextLevel) * 100;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       <h1 className="text-3xl font-bold mb-6">Relatórios</h1>
+
+      <Card className="p-4 mb-6 bg-gradient-to-br from-primary/10 to-primary/5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Award className="w-6 h-6 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">Nível Atual</p>
+              <p className="text-3xl font-bold text-foreground">{level}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground">Progresso</p>
+            <p className="text-sm font-bold">{xpTotal} / {xpForNextLevel} XP</p>
+          </div>
+        </div>
+        <Progress 
+          value={progressPercentage} 
+          className="h-3 transition-all duration-500 ease-out"
+        />
+      </Card>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         <Card className="p-4">
