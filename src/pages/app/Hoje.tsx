@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import XPCard from "@/components/XPCard";
+import BadgeUnlockedModal from "@/components/BadgeUnlockedModal";
 
 interface Task {
   id: string;
@@ -30,6 +31,7 @@ export default function Hoje() {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [difficulty, setDifficulty] = useState("easy");
+  const [newBadges, setNewBadges] = useState<any[]>([]);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -129,6 +131,15 @@ export default function Hoje() {
         }
       });
 
+      // Verificar badges
+      const { data: badgesData } = await supabase.functions.invoke("check-badges", {
+        body: { user_id: user?.id },
+      });
+
+      if (badgesData?.new_badges && badgesData.new_badges.length > 0) {
+        setNewBadges(badgesData.new_badges);
+      }
+
       if (xpData?.ok) {
         toast.success(`Tarefa concluída! +${xpData.xp_awarded} XP`);
       } else {
@@ -151,9 +162,15 @@ export default function Hoje() {
   const progress = stats.total > 0 ? (stats.completed / stats.total) * 100 : 0;
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Hoje</h1>
+    <>
+      <BadgeUnlockedModal 
+        badges={newBadges} 
+        onClose={() => setNewBadges([])} 
+      />
+      
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">Hoje</h1>
         
         <div className="grid grid-cols-2 gap-4 mb-4">
           <XPCard />
@@ -297,6 +314,7 @@ export default function Hoje() {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

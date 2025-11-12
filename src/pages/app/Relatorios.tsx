@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, Flame, Target, Award } from "lucide-react";
+import { TrendingUp, Flame, Target, Award, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export default function Relatorios() {
@@ -16,6 +17,7 @@ export default function Relatorios() {
   const [currentPeriod, setCurrentPeriod] = useState<"week" | "month">("week");
   const [xpTotal, setXpTotal] = useState(0);
   const [level, setLevel] = useState(1);
+  const [weeklyBadges, setWeeklyBadges] = useState<any[]>([]);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export default function Relatorios() {
       loadCompletedTasks("week");
       loadCompletedTasks("month");
       loadXPData();
+      loadWeeklyBadges();
     }
   }, [user]);
 
@@ -38,6 +41,31 @@ export default function Relatorios() {
     if (data) {
       setXpTotal(data.xp_total);
       setLevel(data.level);
+    }
+  };
+
+  const loadWeeklyBadges = async () => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    const { data } = await supabase
+      .from("user_badges")
+      .select(`
+        earned_at,
+        badges:badge_id (
+          id,
+          name,
+          description,
+          xp_reward
+        )
+      `)
+      .eq("user_id", user?.id)
+      .gte("earned_at", weekAgo.toISOString())
+      .order("earned_at", { ascending: false })
+      .limit(3);
+
+    if (data) {
+      setWeeklyBadges(data.map((item: any) => item.badges));
     }
   };
 
@@ -148,6 +176,37 @@ export default function Relatorios() {
           className="h-3 transition-all duration-500 ease-out"
         />
       </Card>
+
+      {/* Conquistas da Semana */}
+      {weeklyBadges.length > 0 && (
+        <Card className="p-6 mb-6 bg-gradient-to-br from-primary/5 to-accent/5">
+          <div className="flex items-center gap-3 mb-4">
+            <Sparkles className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold">Conquistas desta Semana</h2>
+          </div>
+          <div className="space-y-3">
+            {weeklyBadges.map((badge) => (
+              <div
+                key={badge.id}
+                className="flex items-center gap-3 p-3 rounded-lg bg-background border"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-sm truncate">{badge.name}</h3>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {badge.description}
+                  </p>
+                </div>
+                <Badge variant="secondary" className="bg-accent text-accent-foreground flex-shrink-0">
+                  +{badge.xp_reward} XP
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         <Card className="p-4">

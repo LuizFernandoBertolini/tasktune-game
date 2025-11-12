@@ -22,6 +22,7 @@ export type Database = {
           name: string
           rule_json: Json
           slug: string
+          xp_reward: number | null
         }
         Insert: {
           description?: string | null
@@ -30,6 +31,7 @@ export type Database = {
           name: string
           rule_json: Json
           slug: string
+          xp_reward?: number | null
         }
         Update: {
           description?: string | null
@@ -38,6 +40,7 @@ export type Database = {
           name?: string
           rule_json?: Json
           slug?: string
+          xp_reward?: number | null
         }
         Relationships: []
       }
@@ -153,18 +156,21 @@ export type Database = {
           badge_id: string
           earned_at: string | null
           id: string
+          notified: boolean | null
           user_id: string
         }
         Insert: {
           badge_id: string
           earned_at?: string | null
           id?: string
+          notified?: boolean | null
           user_id: string
         }
         Update: {
           badge_id?: string
           earned_at?: string | null
           id?: string
+          notified?: boolean | null
           user_id?: string
         }
         Relationships: [
