@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { updateSoundPreferencesCache } from "@/lib/sounds";
 
 export function useAccessibility() {
   const { user } = useAuth();
@@ -11,12 +12,18 @@ export function useAccessibility() {
     const loadAndApplySettings = async () => {
       const { data } = await supabase
         .from("user_profiles")
-        .select("font_size, high_contrast, low_stimulus")
+        .select("font_size, high_contrast, low_stimulus, sound_feedback")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (data) {
         const html = document.documentElement;
+
+        // Atualizar cache de preferências de som
+        updateSoundPreferencesCache({
+          sound_feedback: data.sound_feedback ?? true,
+          low_stimulus: data.low_stimulus ?? false,
+        });
 
         // Aplicar tamanho de fonte
         html.classList.remove('text-[0.9rem]', 'text-base', 'text-[1.15rem]');

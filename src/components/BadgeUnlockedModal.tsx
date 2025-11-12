@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Sparkles } from "lucide-react";
+import { playSound } from "@/lib/sounds";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface BadgeData {
   id: string;
@@ -17,17 +19,14 @@ interface BadgeUnlockedModalProps {
 
 export default function BadgeUnlockedModal({ badges, onClose }: BadgeUnlockedModalProps) {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (badges.length > 0) {
       setOpen(true);
-      
-      // Som discreto de conquista
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqzn77JfGAg+ltryxnMkBSh+zPLaizsIGGS57OihUBELTKXh8bllHAU2jdXzzn0pBSV7yfDckj4IFmG26+mjURALTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0HFl+16+mjUBELTqnn8rtlHAU4jtXyz3woBSR5x+/bkj0H');
-      audio.volume = 0.3;
-      audio.play().catch(() => {});
+      playSound("xp_gain", user?.id);
     }
-  }, [badges]);
+  }, [badges, user]);
 
   const handleClose = () => {
     setOpen(false);

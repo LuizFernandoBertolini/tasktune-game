@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { LogOut, Save } from "lucide-react";
+import { LogOut, Save, Volume2 } from "lucide-react";
+import { updateSoundPreferencesCache } from "@/lib/sounds";
 
 export default function Config() {
   const [displayName, setDisplayName] = useState("");
@@ -89,7 +90,14 @@ export default function Config() {
       toast.error("Erro ao salvar");
     } else {
       applyAccessibilitySettings(fontSize, highContrast, lowStimulus);
-      toast.success("Configurações salvas!");
+      
+      // Atualizar cache de preferências de som
+      updateSoundPreferencesCache({
+        sound_feedback: soundFeedback,
+        low_stimulus: lowStimulus,
+      });
+      
+      toast.success("Configurações aplicadas com sucesso!");
     }
   };
 
@@ -162,7 +170,10 @@ export default function Config() {
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="sound">Sons de feedback</Label>
+            <div className="flex items-center gap-2">
+              <Volume2 className="w-4 h-4 text-muted-foreground" />
+              <Label htmlFor="sound">Sons de feedback</Label>
+            </div>
             <Switch
               id="sound"
               checked={soundFeedback}

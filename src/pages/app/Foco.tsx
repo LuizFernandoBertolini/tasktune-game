@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Play, Pause, X, Check, ArrowLeft } from "lucide-react";
+import { playSound } from "@/lib/sounds";
 
 export default function Foco() {
   const { taskId } = useParams();
@@ -92,6 +93,7 @@ export default function Foco() {
 
       setSessionId(data.id);
       setStartTime(Date.now());
+      playSound("focus_start", user?.id);
     }
     setIsRunning(true);
   };
@@ -162,7 +164,10 @@ export default function Foco() {
         },
       });
 
+      playSound("focus_end", user?.id);
+      
       if (xpData?.ok) {
+        playSound("xp_gain", user?.id);
         toast.success("Sessão concluída! 🎉", { 
           description: `+${xpData.xp_awarded} XP ganhos!` 
         });

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { clearSoundPreferencesCache } from "@/lib/sounds";
 
 interface AuthContextType {
   user: User | null;
@@ -46,6 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
+    clearSoundPreferencesCache();
     await supabase.auth.signOut();
     navigate("/auth");
   };

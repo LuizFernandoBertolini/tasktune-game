@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import XPCard from "@/components/XPCard";
 import BadgeUnlockedModal from "@/components/BadgeUnlockedModal";
+import { playSound } from "@/lib/sounds";
 
 interface Task {
   id: string;
@@ -118,8 +119,10 @@ export default function Hoje() {
       .eq("id", taskId);
 
     if (error) {
+      playSound("error", user?.id);
       toast.error("Erro ao completar tarefa");
     } else {
+      playSound("task_completed", user?.id);
       // Chamar edge function para atualizar XP
       const { data: xpData } = await supabase.functions.invoke('award-xp', {
         body: {
@@ -141,6 +144,7 @@ export default function Hoje() {
       }
 
       if (xpData?.ok) {
+        playSound("xp_gain", user?.id);
         toast.success(`Tarefa concluída! +${xpData.xp_awarded} XP`);
       } else {
         toast.success("Tarefa concluída!");
