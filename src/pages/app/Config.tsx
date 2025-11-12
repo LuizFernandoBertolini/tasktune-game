@@ -45,27 +45,30 @@ export default function Config() {
   };
 
   const applyAccessibilitySettings = (fontSizeValue: string, highContrastValue: boolean, lowStimulusValue: boolean) => {
-    const root = document.documentElement;
+    const html = document.documentElement;
     
     // Aplicar tamanho de fonte
-    if (fontSizeValue === "large") {
-      root.style.fontSize = "120%";
-    } else {
-      root.style.fontSize = "100%";
+    html.classList.remove('text-[0.9rem]', 'text-base', 'text-[1.15rem]');
+    if (fontSizeValue === 'small') {
+      html.classList.add('text-[0.9rem]');
+    } else if (fontSizeValue === 'medium') {
+      html.classList.add('text-base');
+    } else if (fontSizeValue === 'large') {
+      html.classList.add('text-[1.15rem]');
     }
     
     // Aplicar contraste alto
     if (highContrastValue) {
-      root.setAttribute("data-high-contrast", "true");
+      html.setAttribute("data-high-contrast", "true");
     } else {
-      root.removeAttribute("data-high-contrast");
+      html.removeAttribute("data-high-contrast");
     }
     
     // Aplicar modo reduzido de estímulo
     if (lowStimulusValue) {
-      root.setAttribute("data-low-stimulus", "true");
+      html.setAttribute("data-low-stimulus", "true");
     } else {
-      root.removeAttribute("data-low-stimulus");
+      html.removeAttribute("data-low-stimulus");
     }
   };
 
