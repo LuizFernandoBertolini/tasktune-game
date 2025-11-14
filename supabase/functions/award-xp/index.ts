@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const XP_BASE = { easy: 10, med: 20, hard: 35 } as const;
+const COINS_BASE = { easy: 2, med: 4, hard: 6 } as const;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -93,6 +94,29 @@ serve(async (req) => {
       amount: xp,
       meta: { task_id, difficulty, minutes, streak_bonus: streakBonus }
     });
+
+    // Award coins based on task completion
+    if (!abandoned) {
+      const coins = COINS_BASE[diff];
+      
+      // Initialize wallet if it doesn't exist
+      const { data: wallet } = await supabase
+        .from('user_wallet')
+        .select('coins')
+        .eq('user_id', user_id)
+        .maybeSingle();
+
+      if (!wallet) {
+        await supabase
+          .from('user_wallet')
+          .insert({ user_id, coins });
+      } else {
+        await supabase
+          .from('user_wallet')
+          .update({ coins: wallet.coins + coins })
+          .eq('user_id', user_id);
+      }
+    }
 
     // Award badges
     const { count } = await supabase

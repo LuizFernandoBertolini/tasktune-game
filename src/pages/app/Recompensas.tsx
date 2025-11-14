@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Coins, Trophy, Lock, Sparkles, Award } from "lucide-react";
+import { Coins, Trophy, Lock, Sparkles, Award, ShoppingBag, Gift } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface BadgeType {
   id: string;
@@ -21,27 +23,35 @@ export default function Recompensas() {
   const [coins, setCoins] = useState(0);
   const [badges, setBadges] = useState<BadgeType[]>([]);
   const [totalXPFromBadges, setTotalXPFromBadges] = useState(0);
+  const [userRewardsCount, setUserRewardsCount] = useState(0);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
       loadCoins();
       loadBadges();
+      loadUserRewards();
     }
   }, [user]);
 
   const loadCoins = async () => {
     const { data } = await supabase
-      .from("rewards")
-      .select("amount, type")
+      .from("user_wallet")
+      .select("coins")
+      .eq("user_id", user?.id)
+      .maybeSingle();
+
+    setCoins(data?.coins || 0);
+  };
+
+  const loadUserRewards = async () => {
+    const { data, count } = await supabase
+      .from("user_rewards")
+      .select("*", { count: 'exact' })
       .eq("user_id", user?.id);
 
-    if (data) {
-      const total = data.reduce((acc, r) => {
-        return r.type === "earn" ? acc + r.amount : acc - r.amount;
-      }, 0);
-      setCoins(total);
-    }
+    setUserRewardsCount(count || 0);
   };
 
   const loadBadges = async () => {
@@ -117,21 +127,65 @@ export default function Recompensas() {
         </div>
       </Card>
 
-      {/* Card de Moedas */}
-      <Card className="p-6 mb-6 bg-gradient-accent">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-accent-foreground/80 mb-1">
-              Saldo de moedas
-            </p>
-            <div className="flex items-center gap-2">
-              <Coins className="w-8 h-8 text-accent-foreground" />
-              <span className="text-4xl font-bold text-accent-foreground">{coins}</span>
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Card de Moedas */}
+        <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  Saldo de Moedas
+                </p>
+                <div className="flex items-center gap-2">
+                  <Coins className="w-8 h-8 text-primary" />
+                  <span className="text-4xl font-bold">{coins}</span>
+                </div>
+              </div>
+              <Sparkles className="w-12 h-12 text-primary/20" />
             </div>
-          </div>
-          <Sparkles className="w-16 h-16 text-accent-foreground/20" />
-        </div>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Card de Recompensas */}
+        <Card className="bg-gradient-to-br from-accent/10 to-secondary/10 border-accent/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  Itens da Loja
+                </p>
+                <div className="flex items-center gap-2">
+                  <Gift className="w-8 h-8 text-accent" />
+                  <span className="text-4xl font-bold">{userRewardsCount}</span>
+                </div>
+              </div>
+              <ShoppingBag className="w-12 h-12 text-accent/20" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Botões de Ação */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <Button 
+          onClick={() => navigate("/app/loja")}
+          size="lg"
+          className="h-16"
+        >
+          <ShoppingBag className="w-5 h-5 mr-2" />
+          Ir para a Loja
+        </Button>
+        <Button 
+          onClick={() => navigate("/app/minhas-recompensas")}
+          variant="outline"
+          size="lg"
+          className="h-16"
+        >
+          <Gift className="w-5 h-5 mr-2" />
+          Minhas Recompensas
+        </Button>
+      </div>
 
       <Tabs defaultValue="conquistadas" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -202,11 +256,19 @@ export default function Recompensas() {
         </TabsContent>
       </Tabs>
 
-      <Card className="p-6 mt-6">
-        <h2 className="text-xl font-bold mb-4">Loja (em breve)</h2>
-        <p className="text-muted-foreground text-sm">
-          Em breve você poderá trocar suas moedas por temas personalizados e recursos extras!
-        </p>
+      {/* Info Card */}
+      <Card className="p-6 bg-muted/50">
+        <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
+          <Coins className="w-5 h-5" />
+          Como ganhar moedas?
+        </h2>
+        <ul className="space-y-2 text-sm text-muted-foreground">
+          <li>• Complete tarefas fáceis → <strong>+2 moedas</strong></li>
+          <li>• Complete tarefas médias → <strong>+4 moedas</strong></li>
+          <li>• Complete tarefas difíceis → <strong>+6 moedas</strong></li>
+          <li>• Desbloqueie conquistas → <strong>+10 moedas</strong></li>
+          <li>• Atinja 100% do progresso diário → <strong>+8 moedas</strong></li>
+        </ul>
       </Card>
     </div>
   );
