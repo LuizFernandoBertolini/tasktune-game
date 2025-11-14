@@ -109,6 +109,36 @@ export type Database = {
         }
         Relationships: []
       }
+      rewards_store: {
+        Row: {
+          category: string
+          cost: number
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          category: string
+          cost: number
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          cost?: number
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           completed_at: string | null
@@ -228,6 +258,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_rewards: {
+        Row: {
+          active: boolean | null
+          id: string
+          redeemed_at: string | null
+          reward_id: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          id?: string
+          redeemed_at?: string | null
+          reward_id: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          id?: string
+          redeemed_at?: string | null
+          reward_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_rewards_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards_store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_stats: {
         Row: {
           day: string
@@ -248,6 +310,27 @@ export type Database = {
           minutes_focused?: number | null
           streak?: number | null
           tasks_done?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_wallet: {
+        Row: {
+          coins: number | null
+          created_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          coins?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          coins?: number | null
+          created_at?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []

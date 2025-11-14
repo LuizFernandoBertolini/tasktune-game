@@ -12,6 +12,8 @@ import AppLayout from "./pages/app/Layout";
 import Hoje from "./pages/app/Hoje";
 import Foco from "./pages/app/Foco";
 import Recompensas from "./pages/app/Recompensas";
+import Loja from "./pages/app/Loja";
+import MinhasRecompensas from "./pages/app/MinhasRecompensas";
 import Relatorios from "./pages/app/Relatorios";
 import Config from "./pages/app/Config";
 import NotFound from "./pages/NotFound";
@@ -30,6 +32,8 @@ function AppContent() {
         <Route path="foco" element={<Foco />} />
         <Route path="foco/:taskId" element={<Foco />} />
         <Route path="recompensas" element={<Recompensas />} />
+        <Route path="loja" element={<Loja />} />
+        <Route path="minhas-recompensas" element={<MinhasRecompensas />} />
         <Route path="relatorios" element={<Relatorios />} />
         <Route path="config" element={<Config />} />
       </Route>

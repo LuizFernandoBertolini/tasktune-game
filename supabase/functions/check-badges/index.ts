@@ -152,6 +152,24 @@ serve(async (req) => {
           })
           .eq('user_id', user_id);
 
+        // Adicionar 10 moedas por conquista desbloqueada
+        const { data: wallet } = await supabase
+          .from('user_wallet')
+          .select('coins')
+          .eq('user_id', user_id)
+          .maybeSingle();
+
+        if (!wallet) {
+          await supabase
+            .from('user_wallet')
+            .insert({ user_id, coins: 10 });
+        } else {
+          await supabase
+            .from('user_wallet')
+            .update({ coins: wallet.coins + 10 })
+            .eq('user_id', user_id);
+        }
+
         newBadges.push({
           id: badge.id,
           name: badge.name,
@@ -159,7 +177,7 @@ serve(async (req) => {
           xp_reward: badge.xp_reward,
         });
 
-        console.log(`Badge earned: ${badge.name} (+${badge.xp_reward} XP)`);
+        console.log(`Badge earned: ${badge.name} (+${badge.xp_reward} XP, +10 coins)`);
       }
     }
 

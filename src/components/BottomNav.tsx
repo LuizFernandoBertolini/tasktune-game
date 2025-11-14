@@ -1,4 +1,4 @@
-import { Home, ListTodo, Timer, User } from "lucide-react";
+import { Home, ListTodo, Timer, Award } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -6,7 +6,7 @@ const navItems = [
   { to: "/app/hoje", icon: Home, label: "Home" },
   { to: "/app/hoje", icon: ListTodo, label: "Tarefas" },
   { to: "/app/foco", icon: Timer, label: "Foco" },
-  { to: "/app/config", icon: User, label: "Perfil" },
+  { to: "/app/recompensas", icon: Award, label: "Recompensas" },
 ];
 
 export const BottomNav = () => {

@@ -159,8 +159,44 @@ export default function Hoje() {
         toast.success("Tarefa concluída!");
       }
       
-      loadTasks();
-      loadStats();
+      // Recarregar dados
+      await loadTasks();
+      await loadStats();
+      
+      // Verificar se chegou a 100% do progresso diário
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: todayTasks } = await supabase
+        .from("tasks")
+        .select("status")
+        .eq("user_id", user?.id)
+        .gte("created_at", `${today}T00:00:00`)
+        .lte("created_at", `${today}T23:59:59`);
+
+      const completed = todayTasks?.filter((t) => t.status === "done").length || 0;
+      const total = todayTasks?.length || 0;
+
+      // Se completou 100% das tarefas do dia, dar 8 moedas extras
+      if (total > 0 && completed === total) {
+        const { data: wallet } = await supabase
+          .from("user_wallet")
+          .select("coins")
+          .eq("user_id", user?.id)
+          .maybeSingle();
+
+        if (!wallet) {
+          await supabase
+            .from("user_wallet")
+            .insert({ user_id: user?.id, coins: 8 });
+        } else {
+          await supabase
+            .from("user_wallet")
+            .update({ coins: wallet.coins + 8 })
+            .eq("user_id", user?.id);
+        }
+
+        toast.success("🎉 100% do progresso! +8 moedas extras!");
+      }
+      
       window.dispatchEvent(new CustomEvent('xp-updated'));
     }
   };
