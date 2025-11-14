@@ -1,33 +1,32 @@
-import { Home, Timer, Award, TrendingUp, Settings } from "lucide-react";
+import { Home, ListTodo, Timer, User } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { to: "/app/hoje", icon: Home, label: "Hoje" },
+  { to: "/app/hoje", icon: Home, label: "Home" },
+  { to: "/app/hoje", icon: ListTodo, label: "Tarefas" },
   { to: "/app/foco", icon: Timer, label: "Foco" },
-  { to: "/app/recompensas", icon: Award, label: "Recompensas" },
-  { to: "/app/relatorios", icon: TrendingUp, label: "Relatórios" },
-  { to: "/app/config", icon: Settings, label: "Config" },
+  { to: "/app/config", icon: User, label: "Perfil" },
 ];
 
 export const BottomNav = () => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 safe-area-bottom">
-      <div className="flex justify-around items-center h-16 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border z-50 safe-area-bottom">
+      <div className="flex justify-around items-center h-16 px-4 max-w-lg mx-auto">
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-0 flex-1",
+                "flex flex-col items-center justify-center gap-1.5 px-4 py-2 rounded-xl transition-all min-w-0 flex-1",
                 isActive
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  ? "text-primary scale-105"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
               )
             }
           >
-            <Icon className="w-5 h-5 shrink-0" />
+            <Icon className="w-6 h-6 shrink-0" />
             <span className="text-xs font-medium truncate w-full text-center">
               {label}
             </span>

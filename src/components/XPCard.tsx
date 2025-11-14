@@ -41,23 +41,27 @@ export default function XPCard() {
   const progressPercentage = (xpTotal / xpForNextLevel) * 100;
 
   return (
-    <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5">
-      <div className="flex items-center gap-2 mb-3">
-        <Award className="w-5 h-5 text-primary" />
-        <div>
-          <p className="text-sm text-muted-foreground">Nível</p>
-          <p className="text-2xl font-bold text-foreground">{level}</p>
+    <Card className="p-5 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
+            <Award className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Nível</p>
+            <p className="text-3xl font-bold text-foreground">{level}</p>
+          </div>
         </div>
       </div>
       
       <div className="space-y-2">
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{xpTotal} XP</span>
-          <span>{xpForNextLevel} XP</span>
+        <div className="flex justify-between items-center text-sm">
+          <span className="font-medium text-foreground">{xpTotal} XP</span>
+          <span className="text-muted-foreground">{xpForNextLevel} XP</span>
         </div>
         <Progress 
           value={progressPercentage} 
-          className="h-2 transition-all duration-500 ease-out"
+          className="h-3"
         />
       </div>
     </Card>

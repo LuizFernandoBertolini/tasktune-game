@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Plus, Flame } from "lucide-react";
+import { Plus, Flame, Clock, CheckCircle2, Target, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ export default function Hoje() {
   const [notes, setNotes] = useState("");
   const [difficulty, setDifficulty] = useState("easy");
   const [newBadges, setNewBadges] = useState<any[]>([]);
+  const [displayName, setDisplayName] = useState("");
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -40,8 +41,19 @@ export default function Hoje() {
     if (user) {
       loadTasks();
       loadStats();
+      loadProfile();
     }
   }, [user]);
+
+  const loadProfile = async () => {
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("display_name")
+      .eq("user_id", user?.id)
+      .single();
+
+    if (data) setDisplayName(data.display_name || "");
+  };
 
   const loadTasks = async () => {
     const { data } = await supabase
@@ -57,7 +69,6 @@ export default function Hoje() {
   const loadStats = async () => {
     const today = new Date().toISOString().slice(0, 10);
     
-    // Buscar stats do dia
     const { data: statsData } = await supabase
       .from("user_stats")
       .select("*")
@@ -65,7 +76,6 @@ export default function Hoje() {
       .eq("day", today)
       .maybeSingle();
 
-    // Contar tarefas do dia atual
     const { data: todayTasks } = await supabase
       .from("tasks")
       .select("status")
@@ -123,7 +133,7 @@ export default function Hoje() {
       toast.error("Erro ao completar tarefa");
     } else {
       playSound("task_completed", user?.id);
-      // Chamar edge function para atualizar XP
+      
       const { data: xpData } = await supabase.functions.invoke('award-xp', {
         body: {
           user_id: user?.id,
@@ -134,7 +144,6 @@ export default function Hoje() {
         }
       });
 
-      // Verificar badges
       const { data: badgesData } = await supabase.functions.invoke("check-badges", {
         body: { user_id: user?.id },
       });
@@ -152,172 +161,161 @@ export default function Hoje() {
       
       loadTasks();
       loadStats();
-      // Forçar reload do XPCard
       window.dispatchEvent(new CustomEvent('xp-updated'));
     }
   };
 
-  const difficultyColors = {
-    easy: "bg-success/20 text-success border-success",
-    med: "bg-accent/20 text-accent-foreground border-accent",
-    hard: "bg-destructive/20 text-destructive border-destructive",
+  const difficultyConfig = {
+    easy: { label: "Fácil", color: "bg-success/10 text-success border-success/30" },
+    med: { label: "Média", color: "bg-accent/10 text-accent border-accent/30" },
+    hard: { label: "Difícil", color: "bg-destructive/10 text-destructive border-destructive/30" },
   };
 
   const progress = stats.total > 0 ? (stats.completed / stats.total) * 100 : 0;
+  const greeting = new Date().getHours() < 12 ? "Bom dia" : new Date().getHours() < 18 ? "Boa tarde" : "Boa noite";
 
   return (
     <>
-      <BadgeUnlockedModal 
-        badges={newBadges} 
-        onClose={() => setNewBadges([])} 
-      />
+      <BadgeUnlockedModal badges={newBadges} onClose={() => setNewBadges([])} />
       
-      <div className="container mx-auto px-4 py-6 max-w-2xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Hoje</h1>
-        
-        <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="container mx-auto px-4 py-6 max-w-3xl space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold text-foreground">
+            {greeting}{displayName && `, ${displayName}`}
+          </h1>
+          <p className="text-sm text-muted-foreground">Vamos conquistar suas metas hoje</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <XPCard />
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Flame className="w-4 h-4 text-accent" />
-              <div>
-                <p className="text-xs text-muted-foreground">Sequência</p>
-                <p className="text-2xl font-bold">{stats.streak}</p>
+          
+          <Card className="p-5 border-accent/20 bg-gradient-to-br from-accent/5 to-accent/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-accent flex items-center justify-center shadow-md">
+                  <Flame className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Sequência</p>
+                  <p className="text-3xl font-bold text-foreground">{stats.streak}</p>
+                </div>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">dias consecutivos</p>
+            <p className="text-sm text-muted-foreground mt-3">dias consecutivos</p>
           </Card>
         </div>
 
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Progresso do dia</span>
-            <span className="text-sm font-bold text-primary">{progress.toFixed(0)}%</span>
-          </div>
-          <Progress value={progress} className="mb-2" />
-          <div className="flex justify-between text-xs text-muted-foreground mb-2">
-            <span>{stats.completed} de {stats.total} tarefas concluídas hoje</span>
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{stats.minutes} min focados</span>
-            <span className="text-success">+10 XP por tarefa concluída</span>
-          </div>
-        </Card>
-      </div>
-
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Suas tarefas</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Nova tarefa
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Criar nova tarefa</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Título</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="O que você precisa fazer?"
-                />
-              </div>
-              <div>
-                <Label htmlFor="notes">Notas (opcional)</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Detalhes adicionais..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="difficulty">Dificuldade</Label>
-                <Select value={difficulty} onValueChange={setDifficulty}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="easy">Fácil</SelectItem>
-                    <SelectItem value="med">Média</SelectItem>
-                    <SelectItem value="hard">Difícil</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleCreate} className="w-full">
-                Criar tarefa
-              </Button>
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Progresso do dia</CardTitle>
+              <span className="text-2xl font-bold text-primary">{progress.toFixed(0)}%</span>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {tasks.length === 0 ? (
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground mb-4">
-            Nada por aqui ainda. Que tal criar a primeira tarefa?
-          </p>
-          <Button onClick={() => setOpen(true)}>Criar tarefa</Button>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {tasks.map((task) => (
-            <Card
-              key={task.id}
-              className={`p-4 ${task.status === "done" ? "opacity-60" : ""}`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <h3 className={`font-medium mb-1 ${task.status === "done" ? "line-through" : ""}`}>
-                    {task.title}
-                  </h3>
-                  {task.notes && (
-                    <p className="text-sm text-muted-foreground mb-2">{task.notes}</p>
-                  )}
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full border ${
-                      difficultyColors[task.difficulty as keyof typeof difficultyColors]
-                    }`}
-                  >
-                    {task.difficulty === "easy"
-                      ? "Fácil"
-                      : task.difficulty === "med"
-                      ? "Média"
-                      : "Difícil"}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {task.status === "todo" && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/app/foco/${task.id}`)}
-                      >
-                        Iniciar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleComplete(task.id)}
-                      >
-                        Concluir
-                      </Button>
-                    </>
-                  )}
-                </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Progress value={progress} className="h-3" />
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-success" />
+                <span className="text-muted-foreground">{stats.completed} de {stats.total} tarefas</span>
               </div>
-            </Card>
-          ))}
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">{stats.minutes} min focados</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-3 gap-3">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+                <Plus className="w-6 h-6" />
+                <span className="text-xs">Nova Tarefa</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Criar nova tarefa</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Título</Label>
+                  <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="O que você precisa fazer?" />
+                </div>
+                <div>
+                  <Label htmlFor="notes">Notas (opcional)</Label>
+                  <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Detalhes adicionais..." rows={3} />
+                </div>
+                <div>
+                  <Label htmlFor="difficulty">Dificuldade</Label>
+                  <Select value={difficulty} onValueChange={setDifficulty}>
+                    <SelectTrigger id="difficulty"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="easy">Fácil</SelectItem>
+                      <SelectItem value="med">Média</SelectItem>
+                      <SelectItem value="hard">Difícil</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleCreate} className="w-full">Criar tarefa</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Button variant="outline" className="h-auto py-4 flex-col gap-2" onClick={() => navigate("/app/foco")}>
+            <Timer className="w-6 h-6" />
+            <span className="text-xs">Foco</span>
+          </Button>
+          
+          <Button variant="outline" className="h-auto py-4 flex-col gap-2" onClick={() => navigate("/app/relatorios")}>
+            <Target className="w-6 h-6" />
+            <span className="text-xs">Relatórios</span>
+          </Button>
         </div>
-      )}
+
+        <div className="space-y-3">
+          <h2 className="text-xl font-semibold text-foreground">Suas tarefas</h2>
+          
+          {tasks.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">Nenhuma tarefa ainda. Crie sua primeira tarefa!</p>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {tasks.map((task) => (
+                <Card key={task.id} className={`p-4 transition-all hover:shadow-md ${task.status === "done" ? "opacity-60" : ""}`}>
+                  <div className="flex items-start gap-3">
+                    <button
+                      onClick={() => task.status !== "done" && handleComplete(task.id)}
+                      className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                        task.status === "done" ? "bg-success border-success" : "border-muted-foreground hover:border-primary"
+                      }`}
+                      disabled={task.status === "done"}
+                    >
+                      {task.status === "done" && <CheckCircle2 className="w-4 h-4 text-white" />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`font-medium mb-1 ${task.status === "done" ? "line-through" : ""}`}>{task.title}</h3>
+                      {task.notes && <p className="text-sm text-muted-foreground mb-2">{task.notes}</p>}
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-lg border ${difficultyConfig[task.difficulty as keyof typeof difficultyConfig]?.color}`}>
+                          {difficultyConfig[task.difficulty as keyof typeof difficultyConfig]?.label}
+                        </span>
+                        {task.status !== "done" && (
+                          <Button size="sm" variant="ghost" onClick={() => navigate(`/app/foco/${task.id}`)} className="h-7 text-xs">
+                            <Timer className="w-3 h-3 mr-1" />Focar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

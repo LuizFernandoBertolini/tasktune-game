@@ -12,7 +12,7 @@ export function useAccessibility() {
     const loadAndApplySettings = async () => {
       const { data } = await supabase
         .from("user_profiles")
-        .select("font_size, high_contrast, low_stimulus, sound_feedback")
+        .select("font_size, low_stimulus, sound_feedback")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -35,19 +35,17 @@ export function useAccessibility() {
           html.classList.add('text-[1.15rem]');
         }
 
-        // Aplicar contraste alto
-        if (data.high_contrast) {
-          html.setAttribute("data-high-contrast", "true");
-        } else {
-          html.removeAttribute("data-high-contrast");
-        }
-
         // Aplicar modo reduzido de estímulo
         if (data.low_stimulus) {
           html.setAttribute("data-low-stimulus", "true");
         } else {
           html.removeAttribute("data-low-stimulus");
         }
+        
+        // Aplicar tema salvo no localStorage
+        const savedTheme = localStorage.getItem('app-theme') || 'light';
+        html.classList.remove('theme-light', 'theme-dark', 'theme-high-contrast');
+        html.classList.add(`theme-${savedTheme}`);
       }
     };
 
